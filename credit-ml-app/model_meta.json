@@ -1,0 +1,104 @@
+{
+  "model_type": "RandomForestClassifier",
+  "n_estimators": 300,
+  "training_rows": 800,
+  "test_rows": 200,
+  "feature_count": 25,
+  "features": [
+    "checking_account",
+    "credit_history",
+    "purpose",
+    "savings_account",
+    "employment_since",
+    "personal_status",
+    "other_debtors",
+    "property",
+    "other_plans",
+    "housing",
+    "job",
+    "telephone",
+    "foreign_worker",
+    "duration",
+    "credit_amount",
+    "installment_rate",
+    "residence_since",
+    "age",
+    "existing_credits",
+    "people_liable",
+    "avg_days_early",
+    "repay_consistency",
+    "early_pay_score",
+    "delay_penalty",
+    "net_timing_score"
+  ],
+  "dataset": "German Credit Dataset (UCI)",
+  "random_forest": {
+    "auc": 0.901791080658733,
+    "acc": 0.89,
+    "precision": 0.9111111111111111,
+    "recall": 0.6949152542372882,
+    "f1": 0.7884615384615384,
+    "confusion_matrix": [
+      [
+        137,
+        4
+      ],
+      [
+        18,
+        41
+      ]
+    ],
+    "cv": {
+      "mean": 0.973,
+      "std": 0.0121
+    }
+  },
+  "logistic_regression": {
+    "auc": 0.8973434307008055,
+    "acc": 0.865,
+    "precision": 0.82,
+    "recall": 0.6949152542372882,
+    "f1": 0.7522935779816514,
+    "confusion_matrix": [
+      [
+        132,
+        9
+      ],
+      [
+        18,
+        41
+      ]
+    ],
+    "cv": {
+      "mean": 0.9765,
+      "std": 0.0087
+    }
+  },
+  "feature_importances": {
+    "repay_consistency": 0.391712,
+    "avg_days_early": 0.158753,
+    "net_timing_score": 0.102167,
+    "delay_penalty": 0.089044,
+    "early_pay_score": 0.052936,
+    "credit_amount": 0.032792,
+    "duration": 0.025298,
+    "age": 0.022795,
+    "purpose": 0.014551,
+    "credit_history": 0.012234,
+    "checking_account": 0.010396,
+    "installment_rate": 0.009706,
+    "employment_since": 0.009678,
+    "residence_since": 0.008907,
+    "existing_credits": 0.008752,
+    "property": 0.008454,
+    "savings_account": 0.007478,
+    "personal_status": 0.006895,
+    "job": 0.005947,
+    "telephone": 0.004835,
+    "people_liable": 0.004696,
+    "housing": 0.004035,
+    "other_plans": 0.00396,
+    "other_debtors": 0.00285,
+    "foreign_worker": 0.001129
+  }
+}

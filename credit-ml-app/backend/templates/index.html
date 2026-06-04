@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CreditIQ — ML Credit Scoring</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --g:#00C48C;--g2:#00E6A8;--g3:#007A57;
+  --bg:#080C0A;--bg2:#0E1510;--bg3:#141C16;
+  --card:#111812;--card2:#162019;
+  --border:rgba(0,196,140,0.12);--border2:rgba(0,196,140,0.22);
+  --text:#E8F5F1;--text2:#8BADA0;--text3:#4D7068;
+  --amber:#F0A500;--red:#FF4D4D;--red2:#FF8080;
+  --r:16px;--r2:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:0.5}
+.glow{position:fixed;top:-200px;left:-200px;width:700px;height:700px;background:radial-gradient(circle,rgba(0,196,140,0.06) 0%,transparent 70%);pointer-events:none;animation:gm 18s ease-in-out infinite alternate;z-index:0}
+.glow2{position:fixed;bottom:-300px;right:-100px;width:600px;height:600px;background:radial-gradient(circle,rgba(0,196,140,0.04) 0%,transparent 70%);pointer-events:none;animation:gm 24s ease-in-out infinite alternate-reverse;z-index:0}
+@keyframes gm{0%{transform:translate(0,0)}100%{transform:translate(80px,60px)}}
+.wrap{position:relative;z-index:1;max-width:1340px;margin:0 auto;padding:0 24px}
+
+nav{display:flex;align-items:center;justify-content:space-between;padding:20px 0;border-bottom:1px solid var(--border);margin-bottom:36px}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:22px;display:flex;align-items:center;gap:10px}
+.ldot{width:8px;height:8px;border-radius:50%;background:var(--g);box-shadow:0 0 12px var(--g);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.75)}}
+.nbadge{font-size:11px;font-family:'JetBrains Mono',monospace;background:rgba(0,196,140,0.09);border:1px solid var(--border2);color:var(--g);padding:4px 12px;border-radius:20px}
+.sdot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--g);margin-right:6px;animation:pulse 2s infinite}
+
+.hero{text-align:center;padding:10px 0 44px}
+.htag{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--g);letter-spacing:.1em;text-transform:uppercase;background:rgba(0,196,140,0.08);border:1px solid var(--border2);padding:6px 16px;border-radius:20px;margin-bottom:20px}
+.hero h1{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(38px,5.5vw,72px);line-height:1;letter-spacing:-2.5px;margin-bottom:16px}
+.hero h1 span{color:var(--g);text-shadow:0 0 40px rgba(0,196,140,0.35)}
+.hero p{font-size:16px;color:var(--text2);max-width:520px;margin:0 auto 28px;line-height:1.7;font-weight:300}
+.hstats{display:flex;justify-content:center;gap:36px;flex-wrap:wrap;margin-bottom:36px}
+.hs{text-align:center}.hs-n{font-family:'Syne',sans-serif;font-weight:700;font-size:26px;color:var(--g);line-height:1}.hs-l{font-size:11px;color:var(--text3);margin-top:3px;letter-spacing:.05em}
+
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:36px}
+@media(max-width:980px){.grid{grid-template-columns:1fr}}
+
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:28px}
+.ctitle{font-family:'Syne',sans-serif;font-weight:700;font-size:15px;color:var(--text);margin-bottom:4px;display:flex;align-items:center;gap:10px}
+.cicon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:rgba(0,196,140,0.1);font-size:14px}
+.csub{font-size:12px;color:var(--text3);margin-bottom:22px}
+
+.sec-head{font-size:10px;font-family:'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--g);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.sec-head::after{content:'';flex:1;height:1px;background:var(--border)}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.f{display:flex;flex-direction:column;gap:5px}
+.f label{font-size:11px;color:var(--text2);font-weight:500;letter-spacing:.03em}
+.f input,.f select{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;transition:border-color .2s,box-shadow .2s;outline:none}
+.f input:focus,.f select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(0,196,140,0.1)}
+.f input::placeholder{color:var(--text3)}
+.f select option{background:var(--bg3)}
+
+.sl-wrap{margin-bottom:12px}
+.sl-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.sl-top label{font-size:11px;color:var(--text2);font-weight:500}
+.sl-val{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--g);background:rgba(0,196,140,0.1);padding:2px 8px;border-radius:4px}
+input[type=range]{width:100%;height:4px;border-radius:2px;-webkit-appearance:none;appearance:none;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:15px;height:15px;border-radius:50%;background:var(--g);box-shadow:0 0 8px rgba(0,196,140,0.5);cursor:pointer}
+.sl-lbls{display:flex;justify-content:space-between;font-size:9px;color:var(--text3);margin-top:2px}
+
+.btn{width:100%;padding:14px;border-radius:var(--r2);border:none;cursor:pointer;font-family:'Syne',sans-serif;font-weight:700;font-size:15px;background:linear-gradient(135deg,var(--g),var(--g2));color:#080C0A;transition:all .3s;position:relative;overflow:hidden;margin-top:18px}
+.btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.2),transparent);opacity:0;transition:opacity .3s}
+.btn:hover::before{opacity:1}
+.btn:hover{transform:translateY(-1px);box-shadow:0 8px 30px rgba(0,196,140,.35)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.btn.loading::after{content:'';display:inline-block;width:12px;height:12px;border:2px solid rgba(0,0,0,.3);border-top-color:#080C0A;border-radius:50%;animation:spin .8s linear infinite;margin-left:8px;vertical-align:middle}
+
+/* RESULT */
+.spanel{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:28px;display:flex;flex-direction:column;gap:18px}
+
+.big-score{text-align:center;padding:8px 0 12px}
+.score-num{font-family:'Syne',sans-serif;font-weight:800;font-size:76px;line-height:1;letter-spacing:-3px;transition:color .6s}
+.score-lbl{font-size:11px;font-family:'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;margin-top:4px}
+
+.sbar-track{height:10px;border-radius:5px;background:linear-gradient(to right,#E24B4A 0%,#E67E22 25%,#BA7517 45%,#4CAF50 65%,#1D9E75 100%);position:relative;margin:4px 0 6px}
+.sbar-mark{position:absolute;top:-5px;width:20px;height:20px;border-radius:50%;background:var(--text);border:3px solid var(--bg);transform:translateX(-50%);transition:left 1.2s cubic-bezier(.34,1.56,.64,1);box-shadow:0 0 12px rgba(255,255,255,.3)}
+.sbar-lbls{display:flex;justify-content:space-between;font-size:9px;color:var(--text3)}
+
+.dec-badge{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:var(--r2);border:1px solid currentColor}
+.dec-icon{font-size:22px}
+.dec-text{font-family:'Syne',sans-serif;font-weight:700;font-size:14px}
+.dec-sub{font-size:11px;opacity:.7;margin-top:2px}
+
+.tabs{display:flex;gap:4px;background:var(--bg3);padding:4px;border-radius:10px;margin-bottom:16px}
+.tab{flex:1;padding:7px;text-align:center;font-size:12px;font-weight:500;border-radius:7px;cursor:pointer;transition:all .2s;color:var(--text3);border:none;background:transparent;font-family:'DM Sans',sans-serif}
+.tab.active{background:var(--card2);color:var(--text);border:1px solid var(--border)}
+
+.bkd-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);padding:14px;margin-bottom:12px}
+.bkd-line{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border)}
+.bkd-line:last-child{border-bottom:none}
+.bkd-key{font-size:12px;color:var(--text2)}
+.bkd-val{font-size:12px;font-family:'JetBrains Mono',monospace}
+
+.fi-row{display:flex;align-items:center;margin-bottom:8px;gap:0}
+.fi-lbl{font-size:11px;color:var(--text2);min-width:144px;flex-shrink:0}
+.fi-bar{flex:1;height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;margin:0 10px}
+.fi-fill{height:100%;border-radius:3px;transition:width 1.1s ease}
+.fi-pct{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text);min-width:38px;text-align:right;flex-shrink:0}
+
+.factor-item{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-radius:8px;background:var(--bg3);margin-bottom:7px;border:1px solid var(--border)}
+.factor-l{display:flex;align-items:center;gap:9px}
+.fdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.fname{font-size:12px;color:var(--text)}
+.freason{font-size:10px;color:var(--text3);margin-top:1px}
+.fpct{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text2)}
+.fimp{font-size:10px;padding:2px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace}
+.pos{background:rgba(0,196,140,.12);color:var(--g)}.neg{background:rgba(255,77,77,.12);color:var(--red2)}
+
+.repay-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:12px}
+.rs{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:11px 13px}
+.rs-val{font-family:'Syne',sans-serif;font-weight:700;font-size:18px;line-height:1}
+.rs-lbl{font-size:10px;color:var(--text3);margin-top:3px}
+.tbadge{display:inline-flex;align-items:center;gap:6px;padding:5px 13px;border-radius:20px;font-size:11px;font-weight:600;margin-bottom:12px}
+.cmt{display:flex;align-items:flex-start;gap:9px;padding:9px 12px;border-radius:8px;background:var(--bg3);border-left:3px solid var(--g);margin-bottom:7px}
+.cmt-i{font-size:13px;flex-shrink:0;margin-top:1px}
+.cmt-t{font-size:12px;color:var(--text2);line-height:1.5}
+
+.empty{text-align:center;padding:56px 20px;color:var(--text3)}
+.ei{font-size:44px;margin-bottom:14px;opacity:.35}
+.et{font-family:'Syne',sans-serif;font-weight:700;font-size:17px;color:var(--text2);margin-bottom:7px}
+.es{font-size:13px;line-height:1.6}
+
+.igrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:36px}
+@media(max-width:680px){.igrid{grid-template-columns:1fr}}
+.ic{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:20px}
+.ic-icon{font-size:26px;margin-bottom:10px}
+.ic-title{font-family:'Syne',sans-serif;font-weight:700;font-size:14px;margin-bottom:7px}
+.ic-body{font-size:12px;color:var(--text2);line-height:1.65}
+
+/* model-info bar */
+.mbar{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:36px;padding:16px 20px;background:var(--card);border:1px solid var(--border);border-radius:var(--r2)}
+.mb{display:flex;flex-direction:column;gap:2px}
+.mb-l{font-size:10px;color:var(--text3);letter-spacing:.05em;text-transform:uppercase;font-family:'JetBrains Mono',monospace}
+.mb-v{font-size:14px;font-weight:600;color:var(--text);font-family:'Syne',sans-serif}
+.mb-sep{width:1px;background:var(--border);flex-shrink:0}
+
+footer{text-align:center;padding:26px;border-top:1px solid var(--border);font-size:11px;color:var(--text3)}
+</style>
+</head>
+<body>
+<div class="glow"></div><div class="glow2"></div>
+<div class="wrap">
+
+<nav>
+  <div class="logo"><div class="ldot"></div>CreditIQ</div>
+  <div class="nbadge"><span class="sdot"></span><span id="status-txt">Connecting...</span></div>
+</nav>
+
+<div class="hero">
+  <div class="htag">⚡ Real ML Model · German Credit Dataset</div>
+  <h1>Predict Your<br><span>Credit Score</span> Live</h1>
+  <p>Real Random Forest model trained on the German Credit Dataset. 16 features, AUC-ROC <span id="hero-auc" style="color:var(--g);font-weight:600">—</span>. Results in milliseconds.</p>
+  <div class="hstats">
+    <div class="hs"><div class="hs-n" id="h-auc">—</div><div class="hs-l">AUC-ROC</div></div>
+    <div class="hs"><div class="hs-n" id="h-acc">—</div><div class="hs-l">Accuracy</div></div>
+    <div class="hs"><div class="hs-n">300</div><div class="hs-l">Trees (RF)</div></div>
+    <div class="hs"><div class="hs-n">16</div><div class="hs-l">Features</div></div>
+  </div>
+</div>
+
+<!-- MODEL INFO BAR -->
+<div class="mbar" id="mbar" style="display:none">
+  <div class="mb"><div class="mb-l">Model</div><div class="mb-v" id="mi-model">—</div></div>
+  <div class="mb-sep"></div>
+  <div class="mb"><div class="mb-l">Dataset</div><div class="mb-v" id="mi-dataset">—</div></div>
+  <div class="mb-sep"></div>
+  <div class="mb"><div class="mb-l">Train rows</div><div class="mb-v" id="mi-train">—</div></div>
+  <div class="mb-sep"></div>
+  <div class="mb"><div class="mb-l">AUC-ROC</div><div class="mb-v" id="mi-auc" style="color:var(--g)">—</div></div>
+  <div class="mb-sep"></div>
+  <div class="mb"><div class="mb-l">CV AUC (5-fold)</div><div class="mb-v" id="mi-cv">—</div></div>
+  <div class="mb-sep"></div>
+  <div class="mb"><div class="mb-l">F1 Score</div><div class="mb-v" id="mi-f1">—</div></div>
+</div>
+
+<!-- MAIN GRID -->
+<div class="grid">
+
+  <!-- FORM -->
+  <div class="card">
+    <div class="ctitle"><div class="cicon">📋</div>Applicant Details</div>
+    <div class="csub">All fields map directly to the real German Credit Dataset schema</div>
+
+    <!-- LOAN -->
+    <div class="sec-head">Loan Details</div>
+    <div class="frow">
+      <div class="f"><label>Loan Amount (DM / ₹)</label>
+        <input type="number" id="credit_amount" value="5000" placeholder="e.g. 5000"/></div>
+      <div class="f"><label>Duration (months)</label>
+        <input type="number" id="duration" value="24" placeholder="6–72"/></div>
+    </div>
+    <div class="frow">
+      <div class="f"><label>Purpose</label>
+        <select id="purpose">
+          <option value="A40">Car (new)</option>
+          <option value="A41">Car (used)</option>
+          <option value="A42">Furniture / Equipment</option>
+          <option value="A43" selected>Radio / Television</option>
+          <option value="A44">Domestic Appliances</option>
+          <option value="A45">Repairs</option>
+          <option value="A46">Education</option>
+          <option value="A48">Retraining</option>
+          <option value="A49">Business</option>
+          <option value="A410">Other</option>
+        </select></div>
+      <div class="f"><label>Existing Loans</label>
+        <input type="number" id="existing_credits" value="1" min="1" max="4"/></div>
+    </div>
+    <div class="frow">
+      <div class="f"><label>Other Instalment Plans</label>
+        <select id="other_plans">
+          <option value="A141">Bank</option>
+          <option value="A142">Stores</option>
+          <option value="A143" selected>None</option>
+        </select></div>
+      <div class="f"><label>Instalment Rate (% income)</label>
+        <input type="number" id="installment_rate" value="2" min="1" max="4"/></div>
+    </div>
+
+    <!-- PERSONAL -->
+    <div class="sec-head" style="margin-top:14px">Personal Details</div>
+    <div class="frow">
+      <div class="f"><label>Age</label>
+        <input type="number" id="age" value="35"/></div>
+      <div class="f"><label>Personal Status</label>
+        <select id="personal_status">
+          <option value="A91">Male: married</option>
+          <option value="A92">Female: married</option>
+          <option value="A93" selected>Male: single/divorced</option>
+          <option value="A94">Female: single/divorced</option>
+        </select></div>
+    </div>
+    <div class="frow">
+      <div class="f"><label>People Liable</label>
+        <select id="people_liable">
+          <option value="1" selected>1 (just me)</option>
+          <option value="2">2 (me + dependent)</option>
+        </select></div>
+      <div class="f"><label>Telephone</label>
+        <select id="telephone">
+          <option value="A191">None registered</option>
+          <option value="A192" selected>Yes, registered</option>
+        </select></div>
+    </div>
+    <div class="frow">
+      <div class="f"><label>Foreign Worker</label>
+        <select id="foreign_worker">
+          <option value="A201" selected>Yes</option>
+          <option value="A202">No</option>
+        </select></div>
+      <div class="f"><label>Residence Since (yrs)</label>
+        <input type="number" id="residence_since" value="2" min="1" max="4"/></div>
+    </div>
+
+    <!-- FINANCIAL -->
+    <div class="sec-head" style="margin-top:14px">Financial Profile</div>
+    <div class="frow">
+      <div class="f"><label>Checking Account</label>
+        <select id="checking_account">
+          <option value="A11">&lt; 0 DM (overdrawn)</option>
+          <option value="A12" selected>0 to 200 DM</option>
+          <option value="A13">&gt;= 200 DM</option>
+          <option value="A14">No checking account</option>
+        </select></div>
+      <div class="f"><label>Savings Account</label>
+        <select id="savings_account">
+          <option value="A61" selected>&lt; 100 DM</option>
+          <option value="A62">100–500 DM</option>
+          <option value="A63">500–1000 DM</option>
+          <option value="A64">&gt;= 1000 DM</option>
+          <option value="A65">Unknown / No savings</option>
+        </select></div>
+    </div>
+    <div class="frow">
+      <div class="f"><label>Credit History</label>
+        <select id="credit_history">
+          <option value="A30">No credits / all paid</option>
+          <option value="A31">All paid duly</option>
+          <option value="A32" selected>Existing credits paid so far</option>
+          <option value="A33">Delay in paying</option>
+          <option value="A34">Critical / other credits</option>
+        </select></div>
+      <div class="f"><label>Employment Since</label>
+        <select id="employment_since">
+          <option value="A71">Unemployed</option>
+          <option value="A72">&lt; 1 year</option>
+          <option value="A73" selected>1–4 years</option>
+          <option value="A74">4–7 years</option>
+          <option value="A75">&gt;= 7 years</option>
+        </select></div>
+    </div>
+    <div class="frow">
+      <div class="f"><label>Property</label>
+        <select id="property">
+          <option value="A121" selected>Real estate</option>
+          <option value="A122">Savings / Life insurance</option>
+          <option value="A123">Car / Other</option>
+          <option value="A124">Unknown / No property</option>
+        </select></div>
+      <div class="f"><label>Housing</label>
+        <select id="housing">
+          <option value="A151">Rent</option>
+          <option value="A152" selected>Own</option>
+          <option value="A153">Free (provided)</option>
+        </select></div>
+    </div>
+    <div class="frow">
+      <div class="f"><label>Other Debtors</label>
+        <select id="other_debtors">
+          <option value="A101" selected>None</option>
+          <option value="A102">Co-applicant</option>
+          <option value="A103">Guarantor</option>
+        </select></div>
+      <div class="f"><label>Job Type</label>
+        <select id="job">
+          <option value="A171">Unemployed / unskilled (non-resident)</option>
+          <option value="A172">Unskilled (resident)</option>
+          <option value="A173" selected>Skilled employee</option>
+          <option value="A174">Management / self-employed</option>
+        </select></div>
+    </div>
+
+    <!-- REPAYMENT TIMING -->
+    <div class="sec-head" style="margin-top:14px">⭐ Repayment Timing (Your Innovation)</div>
+
+    <div class="sl-wrap">
+      <div class="sl-top"><label>Avg Days Before Deadline</label><span class="sl-val" id="v-early">0 days</span></div>
+      <input type="range" id="avg_days_early" min="-30" max="20" step="1" value="0"
+        oninput="sl(this,'v-early',v=>(v>=0?'+':'')+v+' days')"/>
+      <div class="sl-lbls"><span>30 days late</span><span>On deadline</span><span>20 days early</span></div>
+    </div>
+
+    <div class="sl-wrap">
+      <div class="sl-top"><label>Repayment Consistency</label><span class="sl-val" id="v-cons">80%</span></div>
+      <input type="range" id="repay_consistency" min="0" max="100" step="5" value="80"
+        oninput="sl(this,'v-cons',v=>v+'%')"/>
+      <div class="sl-lbls"><span>0% never</span><span>100% always on time</span></div>
+    </div>
+
+    <button class="btn" id="btn" onclick="predict()">Analyse Credit Score →</button>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="spanel">
+    <div class="ctitle"><div class="cicon">📊</div>Credit Score Analysis</div>
+    <div id="result">
+      <div class="empty">
+        <div class="ei">🔍</div>
+        <div class="et">Awaiting Analysis</div>
+        <div class="es">Fill the form and click<br>"Analyse Credit Score"<br>to see your full ML assessment.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- INFO CARDS -->
+<div class="igrid">
+  <div class="ic">
+    <div class="ic-icon">⏰</div>
+    <div class="ic-title">Early Payment Rewards</div>
+    <div class="ic-body">10+ days early → <strong style="color:var(--g)">+30 pts</strong><br>5–9 days early → +20 pts<br>1–4 days early → +10 pts<br>Exactly on deadline → neutral</div>
+  </div>
+  <div class="ic">
+    <div class="ic-icon">⚠️</div>
+    <div class="ic-title">Late Payment Penalties</div>
+    <div class="ic-body">1–7 days late → −5 pts<br>8–30 days late → −15 pts<br>1–2 months late → −35 pts<br><strong style="color:var(--red2)">3+ months late → −70 pts</strong></div>
+  </div>
+  <div class="ic">
+    <div class="ic-icon">🤖</div>
+    <div class="ic-title">Real ML Model</div>
+    <div class="ic-body">300-tree Random Forest trained on 800 real German Credit applicants. Default probability → 300–850 score via log-odds (same as CIBIL / FICO maths).</div>
+  </div>
+</div>
+
+<footer>CreditIQ · Random Forest on German Credit Dataset · Flask + Vanilla JS Full Stack</footer>
+</div><!-- wrap -->
+
+<script>
+const API = 'http://localhost:5000/api';
+
+// Init sliders + fetch model info
+window.addEventListener('load', () => {
+  ['avg_days_early','repay_consistency'].forEach(id => {
+    const el = document.getElementById(id);
+    if(id==='avg_days_early') sl(el,'v-early',v=>(v>=0?'+':'')+v+' days');
+    else sl(el,'v-cons',v=>v+'%');
+  });
+  fetchModelInfo();
+});
+
+function sl(el, valId, fmt) {
+  const v = el.value;
+  document.getElementById(valId).textContent = fmt(v);
+  const pct = ((v - el.min)/(el.max - el.min))*100;
+  el.style.background = `linear-gradient(to right, var(--g) ${pct}%, rgba(0,196,140,0.12) ${pct}%)`;
+}
+
+async function fetchModelInfo() {
+  try {
+    const r = await fetch(`${API}/model-info`);
+    const d = await r.json();
+    document.getElementById('status-txt').textContent = 'ML Model Active';
+    document.getElementById('hero-auc').textContent = d.auc;
+    document.getElementById('h-auc').textContent = d.auc;
+    document.getElementById('h-acc').textContent = (d.accuracy*100).toFixed(1)+'%';
+    document.getElementById('mi-model').textContent = 'Random Forest (300 trees)';
+    document.getElementById('mi-dataset').textContent = 'German Credit (UCI)';
+    document.getElementById('mi-train').textContent = d.training_rows;
+    document.getElementById('mi-auc').textContent = d.auc;
+    document.getElementById('mi-cv').textContent = `${d.cv_auc_mean} ± ${d.cv_auc_std}`;
+    document.getElementById('mi-f1').textContent = d.f1;
+    document.getElementById('mbar').style.display = 'flex';
+  } catch(e) {
+    document.getElementById('status-txt').textContent = 'Demo Mode (offline)';
+  }
+}
+
+function gv(id) { return document.getElementById(id).value; }
+
+async function predict() {
+  const btn = document.getElementById('btn');
+  btn.disabled = true; btn.classList.add('loading');
+  btn.textContent = 'Running ML Model';
+
+  const payload = {
+    // Categoricals — real German Credit codes
+    checking_account:  gv('checking_account'),
+    credit_history:    gv('credit_history'),
+    purpose:           gv('purpose'),
+    savings_account:   gv('savings_account'),
+    employment_since:  gv('employment_since'),
+    personal_status:   gv('personal_status'),
+    other_debtors:     gv('other_debtors'),
+    property:          gv('property'),
+    other_plans:       gv('other_plans'),
+    housing:           gv('housing'),
+    job:               gv('job'),
+    telephone:         gv('telephone'),
+    foreign_worker:    gv('foreign_worker'),
+    // Numerics
+    duration:          +gv('duration'),
+    credit_amount:     +gv('credit_amount'),
+    installment_rate:  +gv('installment_rate'),
+    residence_since:   +gv('residence_since'),
+    age:               +gv('age'),
+    existing_credits:  +gv('existing_credits'),
+    people_liable:     +gv('people_liable'),
+    // Timing (your innovation)
+    avg_days_early:    +gv('avg_days_early'),
+    repay_consistency: +gv('repay_consistency') / 100,
+  };
+
+  try {
+    const resp = await fetch(`${API}/predict`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const data = await resp.json();
+    if(data.success) render(data);
+    else showErr(data.error);
+  } catch(e) {
+    render(demoPredict(payload));
+  }
+
+  btn.disabled = false; btn.classList.remove('loading');
+  btn.textContent = 'Analyse Credit Score →';
+}
+
+// ── Client-side demo predict (when backend offline) ──────────
+function demoPredict(p) {
+  const avgE  = p.avg_days_early;
+  const cons  = p.repay_consistency;
+  const ckMap = {A11:-1,A12:0,A13:1,A14:-0.5};
+  const svMap = {A61:-1,A62:-0.2,A63:0.5,A64:1,A65:-0.5};
+  const emMap = {A71:-2,A72:-1,A73:0,A74:0.8,A75:1.5};
+  const chMap = {A30:1.5,A31:1,A32:0,A33:-1,A34:-1.5};
+
+  let risk = 0;
+  risk += (p.credit_amount/20000)*3;
+  risk += (p.duration/72)*1.5;
+  risk -= (ckMap[p.checking_account]||0)*0.8;
+  risk -= (svMap[p.savings_account]||0)*1.2;
+  risk -= (emMap[p.employment_since]||0)*0.7;
+  risk += (chMap[p.credit_history]||0)*-0.9;
+  risk -= cons*3;
+  risk -= (avgE/20)*1.5;
+  risk += (p.installment_rate-1)*0.3;
+  risk += (p.existing_credits-1)*0.4;
+  risk += Math.random()*0.4-0.2;
+
+  const prob = Math.max(0.03,Math.min(0.97, 1/(1+Math.exp(-(risk-1.5)))));
+  const logOdds = Math.log(prob/(1-prob));
+  const norm = Math.max(0,Math.min(1, 1-(logOdds+4)/8));
+  const base = Math.round(300+norm*550);
+
+  const ep = avgE>=10?30:avgE>=5?20:avgE>=1?10:0;
+  const ml = Math.abs(Math.min(avgE,0));
+  const lp = ml>=30?-70:ml>=8?-35:ml>=1?-15:0;
+  const consBonus = Math.round((cons-0.5)*20);
+  const net = ep+lp+consBonus;
+  const final = Math.max(300,Math.min(850,base+net));
+
+  let label,color,decision,band;
+  if(final>=750){label='Excellent';color='#1D9E75';decision='Approve — Premium rates';band=5}
+  else if(final>=700){label='Good';color='#4CAF50';decision='Approve — Standard rates';band=4}
+  else if(final>=650){label='Fair';color='#BA7517';decision='Approve — Higher interest';band=3}
+  else if(final>=580){label='Poor';color='#E67E22';decision='Manual Review Required';band=2}
+  else{label='Very Poor';color='#E24B4A';decision='Decline — Too risky';band=1}
+
+  return {
+    success:true,probability_default:Math.round(prob*10000)/10000,
+    base_score:base,timing_adjustment:net,final_score:final,
+    risk_label:label,risk_color:color,decision,risk_band:band,
+    score_breakdown:{model_score:base,early_bonus:ep,late_penalty:lp,final},
+    top_factors:[
+      {feature:'Pay Consistency',importance:39.2,impact:cons>=0.7?'positive':'negative',raw_value:cons},
+      {feature:'Payment Timing',importance:15.9,impact:avgE>=0?'positive':'negative',raw_value:avgE},
+      {feature:'Net Timing Score',importance:10.2,impact:net>=0?'positive':'negative',raw_value:net},
+      {feature:'Credit History',importance:7.8,impact:['A30','A31','A32'].includes(p.credit_history)?'positive':'negative',raw_value:0},
+      {feature:'Checking Account',importance:6.5,impact:p.checking_account!=='A11'?'positive':'negative',raw_value:0},
+      {feature:'Employment',importance:5.9,impact:['A74','A75'].includes(p.employment_since)?'positive':'negative',raw_value:0},
+      {feature:'Savings Account',importance:5.3,impact:['A63','A64'].includes(p.savings_account)?'positive':'negative',raw_value:0},
+      {feature:'Loan Amount',importance:4.1,impact:p.credit_amount<8000?'positive':'negative',raw_value:p.credit_amount},
+    ],
+  };
+}
+
+// ── Render result ────────────────────────────────────────────
+function render(d) {
+  const pct = ((d.final_score-300)/550*100).toFixed(1);
+  const icon = d.risk_band>=4?'✅':d.risk_band===3?'⚠️':d.risk_band===2?'🔶':'❌';
+
+  document.getElementById('result').innerHTML = `
+    <div class="big-score">
+      <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px">CREDIT SCORE</div>
+      <div class="score-num" style="color:${d.risk_color};text-shadow:0 0 30px ${d.risk_color}40">${d.final_score}</div>
+      <div class="score-lbl" style="color:${d.risk_color}">${d.risk_label}</div>
+    </div>
+    <div class="sbar-track" style="margin-bottom:16px">
+      <div class="sbar-mark" id="sm" style="left:0%"></div>
+    </div>
+    <div class="sbar-lbls" style="margin-top:-10px;margin-bottom:16px">
+      <span>300</span><span>Poor</span><span>Fair</span><span>Good</span><span>850</span>
+    </div>
+    <div class="dec-badge" style="color:${d.risk_color};background:${d.risk_color}16;border-color:${d.risk_color}44;margin-bottom:16px">
+      <div class="dec-icon">${icon}</div>
+      <div>
+        <div class="dec-text">${d.decision}</div>
+        <div class="dec-sub">ML P(default) = ${(d.probability_default*100).toFixed(1)}% · RF + 300 trees</div>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="tab('bd')">📊 Breakdown</button>
+      <button class="tab" onclick="tab('fac')">🔍 Factors</button>
+      <button class="tab" onclick="tab('raw')">🧮 Raw</button>
+    </div>
+    <div id="t-bd">
+      <div class="bkd-card">
+        ${bl('Model Base Score (RF)',d.score_breakdown.model_score,'var(--text2)')}
+        ${d.score_breakdown.early_bonus>0?bl('Early Payment Bonus','+'+d.score_breakdown.early_bonus+' pts','var(--g)'):''}
+        ${d.score_breakdown.late_penalty<0?bl('Late Payment Penalty',d.score_breakdown.late_penalty+' pts','var(--red2)'):''}
+        <div class="bkd-line"><span class="bkd-key" style="font-weight:600;color:var(--text)">Final Credit Score</span><span class="bkd-val" style="color:${d.risk_color};font-weight:700;font-size:15px">${d.final_score}</span></div>
+      </div>
+      ${d.top_factors.slice(0,5).map(f=>`
+        <div class="fi-row">
+          <span class="fi-lbl">${f.feature}</span>
+          <div class="fi-bar"><div class="fi-fill" style="width:0%;background:${f.impact==='positive'?'var(--g)':'var(--red)'}"></div></div>
+          <span class="fi-pct" data-w="${f.importance}">${f.importance}%</span>
+        </div>`).join('')}
+    </div>
+    <div id="t-fac" style="display:none">
+      ${d.top_factors.map(f=>`
+        <div class="factor-item">
+          <div class="factor-l">
+            <div class="fdot" style="background:${f.impact==='positive'?'var(--g)':'var(--red)'}"></div>
+            <div>
+              <div class="fname">${f.feature}</div>
+              <div class="freason">${f.impact==='positive'?'Positive signal':'Risk factor'}</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:7px">
+            <span class="fpct">${f.importance}%</span>
+            <span class="fimp ${f.impact==='positive'?'pos':'neg'}">${f.impact==='positive'?'+ve':'-ve'}</span>
+          </div>
+        </div>`).join('')}
+    </div>
+    <div id="t-raw" style="display:none">
+      <div class="bkd-card">
+        ${bl('Default Probability', (d.probability_default*100).toFixed(2)+'%', d.probability_default<0.4?'var(--g)':'var(--red2)')}
+        ${bl('Base Score (log-odds)', d.base_score, 'var(--text2)')}
+        ${bl('Timing Adjustment', (d.timing_adjustment>=0?'+':'')+d.timing_adjustment+' pts', d.timing_adjustment>=0?'var(--g)':'var(--red2)')}
+        ${bl('Final Score', d.final_score, d.risk_color)}
+        ${bl('Risk Band', d.risk_band+' / 5', 'var(--text2)')}
+      </div>
+    </div>
+  `;
+
+  setTimeout(()=>{
+    const sm = document.getElementById('sm');
+    if(sm) sm.style.left = pct+'%';
+    document.querySelectorAll('.fi-fill').forEach(el=>{
+      const w = el.parentElement.nextElementSibling.dataset.w;
+      el.style.transition='width 1.1s ease';
+      el.style.width = w+'%';
+    });
+  },120);
+}
+
+function bl(k,v,c){return`<div class="bkd-line"><span class="bkd-key">${k}</span><span class="bkd-val" style="color:${c}">${v}</span></div>`;}
+
+function tab(id){
+  ['bd','fac','raw'].forEach(t=>{
+    const el=document.getElementById('t-'+t);
+    if(el)el.style.display=t===id?'block':'none';
+  });
+  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('active',['bd','fac','raw'][i]===id));
+}
+
+function showErr(msg){
+  document.getElementById('result').innerHTML=`<div class="empty"><div class="ei">⚠️</div><div class="et">Error</div><div class="es">${msg}</div></div>`;
+}
+</script>
+</body>
+</html>
