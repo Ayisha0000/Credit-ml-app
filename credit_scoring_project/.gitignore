@@ -1,0 +1,20 @@
+# Virtualenv
+myenv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Data & outputs
+data/*.csv
+outputs/
+*.pkl
+
+# Tests cache
+.pytest_cache/
+
+# IDEs
+.vscode/
+.idea/

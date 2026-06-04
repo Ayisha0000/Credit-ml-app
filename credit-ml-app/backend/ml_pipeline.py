@@ -25,15 +25,27 @@ from sklearn.metrics import (
 warnings.filterwarnings("ignore")
 
 # ── Paths ──────────────────────────────────────────────────────
-BASE_DIR    = os.path.dirname(os.path.abspath(__file__))
-DATA_PATH   = os.path.join(BASE_DIR, "german.data")
-STORE_DIR   = os.path.join(BASE_DIR, "model_store")
-RF_PATH     = os.path.join(STORE_DIR, "rf_model.pkl")
-LR_PATH     = os.path.join(STORE_DIR, "lr_model.pkl")
-SCALER_PATH = os.path.join(STORE_DIR, "scaler.pkl")
-ENC_PATH    = os.path.join(STORE_DIR, "encoders.pkl")
-META_PATH   = os.path.join(STORE_DIR, "model_meta.json")
+BASE_DIR        = os.path.dirname(os.path.abspath(__file__))
+REPO_ROOT       = os.path.abspath(os.path.join(BASE_DIR, os.pardir, os.pardir))
+DATA_PATH       = os.path.join(BASE_DIR, "german.data")
+ROOT_DATA_PATH  = os.path.join(REPO_ROOT, "data", "german.data")
+STORE_DIR       = os.path.join(BASE_DIR, "model_store")
+ROOT_MODELS_DIR = os.path.join(REPO_ROOT, "models")
+
+RF_PATH         = os.path.join(STORE_DIR, "rf_model.pkl")
+LR_PATH         = os.path.join(STORE_DIR, "lr_model.pkl")
+SCALER_PATH     = os.path.join(STORE_DIR, "scaler.pkl")
+ENC_PATH        = os.path.join(STORE_DIR, "encoders.pkl")
+META_PATH       = os.path.join(STORE_DIR, "model_meta.json")
+
+ROOT_RF_PATH    = os.path.join(ROOT_MODELS_DIR, "rf_model.pkl")
+ROOT_LR_PATH    = os.path.join(ROOT_MODELS_DIR, "lr_model.pkl")
+ROOT_SCALER_PATH= os.path.join(ROOT_MODELS_DIR, "scaler.pkl")
+ROOT_ENC_PATH   = os.path.join(ROOT_MODELS_DIR, "encoders.pkl")
+ROOT_META_PATH  = os.path.join(ROOT_MODELS_DIR, "model_meta.json")
+
 os.makedirs(STORE_DIR, exist_ok=True)
+os.makedirs(ROOT_MODELS_DIR, exist_ok=True)
 
 # ── Column schema (exact German Credit Dataset columns) ────────
 COLUMNS = [
@@ -69,7 +81,11 @@ FEATURE_COLS = CATEGORICAL_COLS + NUMERIC_COLS + TIMING_COLS
 
 # ── 1. LOAD DATA ───────────────────────────────────────────────
 
-def load_data(path: str = DATA_PATH) -> pd.DataFrame:
+def load_data(path: str | None = None) -> pd.DataFrame:
+    if path is None:
+        path = ROOT_DATA_PATH if os.path.exists(ROOT_DATA_PATH) else DATA_PATH
+    elif path == DATA_PATH and os.path.exists(ROOT_DATA_PATH):
+        path = ROOT_DATA_PATH
     df = pd.read_csv(path, sep=" ", names=COLUMNS)
     # Recode: 1=Good→0 (will repay), 2=Bad→1 (will default)
     df["target"] = df["target"].map({1: 0, 2: 1})
@@ -306,13 +322,20 @@ def run_pipeline(data_path: str = DATA_PATH) -> dict:
     }
 
     print("\n[10] Saving model artifacts...")
-    joblib.dump(rf,       RF_PATH);     print(f"  ✓ {RF_PATH}")
-    joblib.dump(lr,       LR_PATH);     print(f"  ✓ {LR_PATH}")
-    joblib.dump(scaler,   SCALER_PATH); print(f"  ✓ {SCALER_PATH}")
-    joblib.dump(encoders, ENC_PATH);    print(f"  ✓ {ENC_PATH}")
+    joblib.dump(rf,       RF_PATH);       print(f"  ✓ {RF_PATH}")
+    joblib.dump(rf,       ROOT_RF_PATH);  print(f"  ✓ {ROOT_RF_PATH}")
+    joblib.dump(lr,       LR_PATH);       print(f"  ✓ {LR_PATH}")
+    joblib.dump(lr,       ROOT_LR_PATH);  print(f"  ✓ {ROOT_LR_PATH}")
+    joblib.dump(scaler,   SCALER_PATH);   print(f"  ✓ {SCALER_PATH}")
+    joblib.dump(scaler,   ROOT_SCALER_PATH);print(f"  ✓ {ROOT_SCALER_PATH}")
+    joblib.dump(encoders, ENC_PATH);      print(f"  ✓ {ENC_PATH}")
+    joblib.dump(encoders, ROOT_ENC_PATH); print(f"  ✓ {ROOT_ENC_PATH}")
     with open(META_PATH, "w") as f:
         json.dump(meta, f, indent=2)
     print(f"  ✓ {META_PATH}")
+    with open(ROOT_META_PATH, "w") as f:
+        json.dump(meta, f, indent=2)
+    print(f"  ✓ {ROOT_META_PATH}")
 
     print("\n" + "═"*52)
     print(f"  Pipeline complete. RF AUC = {rf_metrics['auc']:.4f}")
@@ -331,16 +354,27 @@ _meta    = None
 
 def load_artifacts():
     global _rf, _scaler, _enc, _meta
-    _rf     = joblib.load(RF_PATH)
-    _scaler = joblib.load(SCALER_PATH)
-    _enc    = joblib.load(ENC_PATH)
-    with open(META_PATH) as f:
+    if os.path.exists(ROOT_RF_PATH) and os.path.exists(ROOT_SCALER_PATH) and os.path.exists(ROOT_ENC_PATH) and os.path.exists(ROOT_META_PATH):
+        _rf     = joblib.load(ROOT_RF_PATH)
+        _scaler = joblib.load(ROOT_SCALER_PATH)
+        _enc    = joblib.load(ROOT_ENC_PATH)
+        meta_path = ROOT_META_PATH
+        print("  Loading artifacts from root models directory...")
+    else:
+        _rf     = joblib.load(RF_PATH)
+        _scaler = joblib.load(SCALER_PATH)
+        _enc    = joblib.load(ENC_PATH)
+        meta_path = META_PATH
+        print("  Loading artifacts from local model_store...")
+    with open(meta_path) as f:
         _meta = json.load(f)
     print("  Model artifacts loaded.")
 
 
 def artifacts_exist() -> bool:
-    return all(os.path.exists(p) for p in [RF_PATH, SCALER_PATH, ENC_PATH, META_PATH])
+    root_ok = all(os.path.exists(p) for p in [ROOT_RF_PATH, ROOT_SCALER_PATH, ROOT_ENC_PATH, ROOT_META_PATH])
+    local_ok = all(os.path.exists(p) for p in [RF_PATH, SCALER_PATH, ENC_PATH, META_PATH])
+    return root_ok or local_ok
 
 
 def _encode_input(raw: dict) -> pd.DataFrame:

@@ -34,7 +34,10 @@ def home():
 
 
 # ── Bootstrap: train if no saved model, else load ─────────────
-DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "german.data")
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, os.pardir))
+ROOT_DATA_PATH = os.path.join(REPO_ROOT, "data", "german.data")
+LOCAL_DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "german.data")
+DATA_PATH = ROOT_DATA_PATH if os.path.exists(ROOT_DATA_PATH) else LOCAL_DATA_PATH
 
 def bootstrap():
     """On startup: train model if artifacts don't exist, else load saved ones."""

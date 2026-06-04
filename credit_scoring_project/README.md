@@ -49,3 +49,10 @@ credit_scoring_project/
 ├── main.py                  # Run full pipeline
 └── requirements.txt
 ```
+
+## Developer Notes
+
+- Make `src/` a proper package for imports — `import src.config`.
+- Run the full pipeline with `python main.py` or `python -m src` after installing dependencies.
+- Tests: `pytest -q` (the repository contains a basic smoke test).
+
