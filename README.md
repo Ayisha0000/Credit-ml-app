@@ -135,15 +135,4 @@ python app.py
 http://localhost:5000
 ```
 
--- Notes & assumptions
-- I did not change business logic; only added packaging and documentation.
-- Use the same activated `.venv` for both the training pipeline and the Flask app.
-- The Flask app is configured to use `data\german.data` and root `models/` artifacts when available, with fallbacks to local folders.
-- There is duplicated ML pipeline code in `credit_scoring_project/src/` and `credit-ml-app/backend/ml_pipeline.py`. These are functionally similar and should be consolidated into a single library under `credit_scoring_project/src/` and imported by the Flask app.
-- Before moving/deleting files I will ask your approval and provide a change plan that ensures the Flask app and training scripts still work.
 
-If you want, I can now:
-- consolidate the artifact locations and update code to load from `models/` (I will make non-destructive copies and keep backups), or
-- consolidate the ML code into `credit_scoring_project/src/` and update the Flask app to import that package.
-
-Which action should I take next? (pick one or ask for both)
